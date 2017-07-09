@@ -81,8 +81,7 @@ var LinkageSel = function(opts) {
     if (/msie/.test(navigator.userAgent.toLowerCase())) {
         if ($.browser && $.browser.version && $.browser.version == '6.0') {
             this.st.ie6 = true; // ie6
-        }
-        else if (!$.support.leadingWhitespace) {
+        } else if (!$.support.leadingWhitespace) {
             this.st.ie6 = true; // ie6-8! jQuery 1.9+
         }
     }
@@ -106,8 +105,7 @@ var LinkageSel = function(opts) {
 
     var loader = $('#linkagesel_loader');
     if (!loader || !loader[0]) {
-        $(document.body).append('<img id="linkagesel_loader" style="display: none; position: absolute;"  src="' +
-                encodeURI(this.st.loaderImg || 'ui-anim_basic_16x16.gif') + '" />');
+        // $(document.body).append('<img id="linkagesel_loader" style="display: none; position: absolute;"  src="' + encodeURI(this.st.loaderImg || 'ui-anim_basic_16x16.gif') + '" />');
         this.loader = $('#linkagesel_loader') || null;
     }
     else {
@@ -145,7 +143,7 @@ var LinkageSel = function(opts) {
     for (var i = 0; i < selLen; i++) {
         this.bind((this.st.select)[i]);
     }
-
+    // console.log(this.st);
     selLen = opts = loader = null;
 
     this.clean(0);
@@ -373,7 +371,6 @@ LinkageSel.prototype.fill = function (bindIdx, selValue) {
     else {                              // 普通调用
         selValue = typeof selValue !== 'undefined' && selValue !== '' ? selValue : null;    // select默认值
     }
-
     // 触发事件的(上级)select无值或空值则不操作直接跳过
     if ( bindIdx > 0 && (bindEls[bindIdx - 1].value === null || bindEls[bindIdx - 1].value === '') ) {
         //console.log([bindIdx, bindEls[bindIdx -1]]);
@@ -432,7 +429,8 @@ LinkageSel.prototype.fill = function (bindIdx, selValue) {
 
         // 开始生成 <option>
         var tOption,
-            index = 1,
+            // 修复没有设置默认选项导致的defVal不正确bug
+            index = st.head ? 1 : 0,
             selectedIdx = 0,
             name = st.dataReader.name,
             id = st.dataReader.id;
@@ -493,8 +491,7 @@ LinkageSel.prototype.fill = function (bindIdx, selValue) {
 
         if (! st.ie6) {
             typeof elm[0].options[selectedIdx] === 'object' && (elm[0].options[selectedIdx].selected = true);
-        }
-        else {
+        } else {
             setTimeout(function(){
                 typeof elm[0].options[selectedIdx] === 'object' && (elm[0].options[selectedIdx].selected = true);
                 if (selValue) {     // ie6

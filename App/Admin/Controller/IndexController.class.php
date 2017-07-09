@@ -2,9 +2,9 @@
 // +----------------------------------------------------------------------
 // | TP-Admin [ 多功能后台管理系统 ]
 // +----------------------------------------------------------------------
-// | Copyright (c) 2013-2015 http://www.hhailuo.com All rights reserved.
+// | Copyright (c) 2013-2016 http://www.hhailuo.com All rights reserved.
 // +----------------------------------------------------------------------
-// | Author: XiaoYao <476552238li@gmail.com>
+// | Author: 逍遥·李志亮 <xiaoyao.working@gmail.com>
 // +----------------------------------------------------------------------
 
 namespace Admin\Controller;
@@ -14,46 +14,30 @@ use Admin\Controller\CommonController;
  * 后台首页
 */
 class IndexController extends CommonController {
-	public function index() {
-		// 菜单显示自定义方式
-		$model = D("Menu");
-		if ($_SESSION[C('ADMIN_AUTH_KEY')]) {
-			$top_menu = $model->where(array('pid' => 0, 'status' => 1))->order('sort desc, id asc')->select();
-			$sites = D('Site')->select();
-		} else {
-			$top_menu = $model->table( C('DB_PREFIX') . 'access as access, ' . C('DB_PREFIX') . 'node as node')->where("node.pid = 0 AND node.status = 1 AND node.id = access.node_id AND access.role_id = {$_SESSION['user_info']['role_id']} AND access.siteid=" . $this->siteid)->order('node.sort desc, node.id asc')->select();
 
-			$sites = M()->table( C('DB_PREFIX') . 'access as access, ' . C('DB_PREFIX') . 'site as site' )->where( "access.siteid = site.id AND access.role_id = {$_SESSION['user_info']['role_id']}" )->group('access.siteid')->select();
-		}
-		$role = D('Role')->find($_SESSION['user_info']['role_id']);
-		$_SESSION['user_info']['name'] = $role['name'];
-		$site_info = get_site_info( get_siteid() );
+	public function index() {
+		// 获取可访问站点
+		$sites = logic('site')->getAccessibleSites();
+		// 获取顶部可访问菜单
+		$top_menu = logic('Menu')->getAccessibleTopMenu();
+		$seo = get_site_seo_info();
+		$role = model('Role')->find(session('user_info.role_id'));
+		$_SESSION['user_info']['role_name'] = $role['name'];
+		$site_info = get_site_info($this->siteid);
+		$this->assign('seo', $seo);
 		$this->assign('sites', $sites);
 		$this->assign('site_info', $site_info);
 		$this->assign('top_menu', $top_menu);
-		$this->assign('user_info', $_SESSION['user_info']);
-		$this->display('Admin:index');
+		$this->assign('user_info', session('user_info'));
+		$this->display();
 	}
 
 	public function left() {
 		// 菜单显示自定义方式
-		$mid = empty($_GET['mid']) ? 1 : $_GET['mid'];
-		$model = D("Menu");
-		if ($_SESSION[C('ADMIN_AUTH_KEY')]) {
-			$menulist = $model->where("pid = %d AND status = 1", $mid)->order('sort desc')->select();
-		} else {
-			$menulist = $model->table( C('DB_PREFIX') . 'access as access, ' . C('DB_PREFIX') . 'node as node')->where("node.pid = %d AND node.status = 1 AND node.id = access.node_id AND access.role_id = %d AND access.siteid = %d", array($mid, $_SESSION['user_info']['role_id'], $this->siteid))->order('node.sort desc')->select();
-		}
-		foreach ($menulist as $key => $value) {
-			if ($_SESSION[C('ADMIN_AUTH_KEY')]) {
-				$childs = $model->where( array( 'pid' => $value['id'], 'status' => 1 ) )->order('sort desc')->select();
-			} else {
-				$childs = $model->table( C('DB_PREFIX') . 'access as access, ' . C('DB_PREFIX') . 'node as node')->where("node.pid = {$value['id']} AND node.status = 1 AND node.id = access.node_id AND access.role_id = {$_SESSION['user_info']['role_id']} AND access.siteid=" . $this->siteid)->order('node.sort desc')->select();
-			}
-			$menulist[$key]['childs'] = $childs;
-		}
+		$mid = I('get.mid', 1);
+		$menulist = logic('Menu')->getAccessibleLeftMenu($mid);
 		$this->assign('menulist', $menulist);
-		$this->display('Admin:left');
+		$this->display();
 	}
 
 	public function main() {
@@ -71,14 +55,17 @@ class IndexController extends CommonController {
 			'4' => ini_get('upload_max_filesize'),
 			'5' => $gd,
 			);
-		$this->assign('system_info', $system_info);
-		$this->assign('area',get_location($_SESSION['user_info']['last_login_ip']));
-		$this->assign('user_info', $_SESSION['user_info']);
-		$this->display('Admin:main');
+		$user_info = $_SESSION['user_info'];
+		$area = get_location($user_info['last_login_ip']);
+		ob_start();
+		include dirname(__DIR__) . '/View/' . C('DEFAULT_THEME') . '/Index/main.html';
+		$html = ob_get_contents();
+		ob_end_clean();
+		system_information($html);
 	}
 
 	public function change_site() {
-		$siteid = isset($_GET['siteid']) ? intval($_GET['siteid']) : '';
+		$siteid = I('get.siteid');
 		if (empty($siteid)) {
 			$this->error( '参数错误', 'Index/index' );
 		}
@@ -87,15 +74,15 @@ class IndexController extends CommonController {
 	}
 
 	/**
-	* 维持 session 登陆状态
-	*/
+	 * 维持 session 登陆状态
+	 */
 	public function public_session_life() {
-		return true;
+		$this->ajaxReturn('1');
 	}
 
 	/**
-	* 清理缓存，待完善
-	*/
+	 * 清理缓存，待完善
+	 */
 	public function cache_clean() {
 		echo "<span style='color: red;'>缓存清理中……</span><br/>";
 		$path = RUNTIME_PATH . "Cache/";

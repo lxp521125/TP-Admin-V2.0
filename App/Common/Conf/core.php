@@ -7,7 +7,6 @@ $core_config = array(
     'config'    =>  array(
         THINK_PATH.'Conf/convention.php',   // 系统惯例配置
         CONF_PATH.'config'.CONF_EXT,      // 应用公共配置
-        COMMON_PATH.'Conf/database.php',
     ),
 
     // 别名定义
@@ -27,6 +26,7 @@ $core_config = array(
     'core'      =>  array(
         THINK_PATH.'Common/functions.php',
         COMMON_PATH.'Common/function.php',
+        COMMON_PATH.'Common/iconv.func.php',
         CORE_PATH . 'Hook'.EXT,
         CORE_PATH . 'App'.EXT,
         CORE_PATH . 'Dispatcher'.EXT,
@@ -37,7 +37,6 @@ $core_config = array(
         BEHAVIOR_PATH . 'BuildLiteBehavior'.EXT,
         BEHAVIOR_PATH . 'ParseTemplateBehavior'.EXT,
         BEHAVIOR_PATH . 'ContentReplaceBehavior'.EXT,
-        COMMON_PATH.'Conf/bootstrap.php',
     ),
     // 行为扩展定义
     'tags'  =>  array(
@@ -62,8 +61,12 @@ $core_config = array(
     ),
 );
 
-if (file_exists(COMMON_PATH.'Conf/local.php')) {
-    $core_config['config'][] = COMMON_PATH.'Conf/local.php';
+if (file_exists(CONF_PATH.'local.php')) {
+    $core_config['config'][] = CONF_PATH.'local.php';
 }
+if (file_exists(CONF_PATH.'local-constants.php')) {
+    $core_config['core'][] = CONF_PATH.'local-constants.php';
+}
+$core_config['core'][] = CONF_PATH.'constants.php';
 
 return $core_config;

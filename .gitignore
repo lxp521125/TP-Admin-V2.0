@@ -1,6 +1,8 @@
-/Public/Runtime
-/Public/Uploads
-/App/Common/Conf/local.php
-/App/Common/Conf/sitelist.php
+/App/Common/Conf/local*.php
 /vendor
-/composer.lock
+.idea/
+todo.me
+sftp-config.json
+install.lock
+package/
+upgrade/
